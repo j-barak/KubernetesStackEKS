@@ -1,0 +1,17 @@
+name: terraform_destroy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy_eks_cluster:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Enter Directory
+        run: cd ~/actions-runner/_work/eks-cluster-project/eks-cluster-project
+
+      - name: Destroy 
+        run: terraform destroy -auto-approve

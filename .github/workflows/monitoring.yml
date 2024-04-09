@@ -1,0 +1,44 @@
+name: Prometheus&grafana
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy_prometheus:
+    runs-on: self-hosted
+    steps:
+      - name: Install helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
+          
+      - name: Add Prometheus community helm repository
+        run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+      - name: Create Prometheus namespace
+        run: kubectl create namespace prometheus || [ $? -eq 1 ]
+
+      - name: Install Prometheus using Helm
+        run: |
+          if ! helm ls -n prometheus | grep -q prometheus; then
+           helm install prometheus prometheus-community/kube-prometheus-stack -n prometheus
+          fi
+
+      - name: Check Prometheus pods
+        run: kubectl get pods -n prometheus
+
+      - name: Check Prometheus services
+        run: kubectl get svc -n prometheus
+
+      - name: Edit Prometheus service to LoadBalancer type
+        run: kubectl patch svc prometheus-kube-prometheus-prometheus -n prometheus --type='json' -p='[{"op":"replace","path":"/spec/type","value":"LoadBalancer"}]'
+
+      - name: Edit Grafana service to LoadBalancer type
+        run:  kubectl patch svc prometheus-grafana -n prometheus --type='json' -p='[{"op":"replace","path":"/spec/type","value":"LoadBalancer"}]'
+
+      - name: Wait for outputs
+        run: sleep 30
+        
+      - name: Get Grafana admin password
+        run: |

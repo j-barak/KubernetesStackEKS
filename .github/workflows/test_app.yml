@@ -1,0 +1,20 @@
+name: my application
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Apply deployment
+        run: kubectl apply -f deployment.yml
+
+      - name: Get deployment
+        run: kubectl get deployment
+
+      - name: Get pods
+        run: kubectl get pods
